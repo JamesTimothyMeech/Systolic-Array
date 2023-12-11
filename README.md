@@ -1,10 +1,5 @@
-# Caravel User Project
+# Systolic Array Project
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![UPRJ_CI](https://github.com/efabless/caravel_project_example/actions/workflows/user_project_ci.yml/badge.svg)](https://github.com/efabless/caravel_project_example/actions/workflows/user_project_ci.yml) [![Caravel Build](https://github.com/efabless/caravel_project_example/actions/workflows/caravel_build.yml/badge.svg)](https://github.com/efabless/caravel_project_example/actions/workflows/caravel_build.yml)
+This is a more advanced parameterizable systolic array project built using the same method as: https://github.com/JamesTimothyMeech/RNG The systolic array is a significantly more advanced design than the random number generator. We used GitHub Copilot with the random number generator design files open as reference to produce this design in a single GitHub Copilot chat session. The chat log and Amaranth Python script used to generate the systolic array are avaliable in the repository. I will add futher documentation in the coming days.
 
-| :exclamation: Important Note            |
-|-----------------------------------------|
 
-## Please fill in your project documentation in this README.md file 
-
-Refer to [README](docs/source/index.rst) for this sample project documentation. 
