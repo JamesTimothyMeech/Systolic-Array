@@ -2,7 +2,8 @@
 **GitHub Copilot:**
 Hi **@JamesTimothyMeech**, how can I help you?
 **Human:**
-Generate a amaranth (nmigen) python script which will generate a hardware description language implementation of a systolic array. The systolic array must produce an output that that is the multiplication of the two input matrices. The design should be parameterizable so that the Matrices have size N by N and N can be set using a variable. The input data type should be 16 bit integers and the output data type should be 32 bits. The systolic array should be connected to a wishbone to allow us to shift the input matrices into and out of the systolic array. The wishbone should have a 32 bit data bus and a 32 bit address bus. Please make your script begin with: \n```\nfrom amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\n```",
+Generate a amaranth (nmigen) python script which will generate a hardware description language implementation of a systolic array. The systolic array must produce an output that that is the multiplication of the two input matrices. The design should be parameterizable so that the Matrices have size N by N and N can be set using a variable. The input data type should be 16 bit integers and the output data type should be 32 bits. The systolic array should be connected to a wishbone to allow us to shift the input matrices into and out of the systolic array. The wishbone should have a 32 bit data bus and a 32 bit address bus. Please make your script begin with: 
+```from amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\n```",
 **GitHub Copilot:**
 First, let's outline the steps in pseudocode:
 1. Import the necessary modules.
