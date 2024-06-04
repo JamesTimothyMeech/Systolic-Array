@@ -185,11 +185,55 @@ Please write a script to test the functionality of the systolic array using rand
 
 **GitHub Copilot:**
 
-To test the functionality of the systolic array, we can create a simulation script that feeds random inputs to the systolic array and checks the output. Here's a basic example:\n\n
-```python\nfrom amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\nimport random\n\nclass SystolicArrayTest(Simulator):\n    def __init__(self, dut):\n        super().__init__(dut, vcd_file=open(\"test.vcd\", \"w\"))\n\n    def process(self):\n        for _ in range(100):  # Run the test 100 times\n            # Generate random inputs\n            matrix1 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]\n            matrix2 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]\n\n            # Load the inputs into the systolic array\n            for i in range(self.dut.N*self.dut.N):\n                yield self.dut.wb_bus.adr.eq(i)\n                yield self.dut.wb_bus.dat_w.eq(matrix1[i])\n                yield Tick()\n                yield self.dut.wb_bus.adr.eq(i+self.dut.N*self.dut.N)\n                yield self.dut.wb_bus.dat_w.eq(matrix2[i])\n                yield Tick()\n\n            # Check the output\n            for i in range(self.dut.N*self.dut.N):\n                yield self.dut.wb_bus.adr.eq(i+2*self.dut.N*self.dut.N)\n                yield Tick()\n                assert (yield self.dut.wb_bus.dat_r) == matrix1[i] * matrix2[i]\n\n# Create the systolic array and the test\ndut = SystolicArray(N=4)\nsim = SystolicArrayTest(dut)\n\n# Run the test\nsim.run()\n```\n\nThis script creates a test for the Systolic Array. It generates random inputs, loads them into the array, and checks that the output is the multiplication of the inputs. The test is run 100 times. The results of the simulation are saved in a VCD file, which can be viewed with a waveform viewer.",
-**Human:**   
+To test the functionality of the systolic array, we can create a simulation script that feeds random inputs to the systolic array and checks the output. Here's a basic example:
+
+```
+from amaranth import *
+from amaranth.sim import *
+from amaranth.back import verilog
+from amaranth_soc import wishbone
+import random
+
+class SystolicArrayTest(Simulator):
+   def __init__(self, dut):
+      super().__init__(dut, vcd_file=open(\"test.vcd\", \"w\"))
+
+   def process(self):
+      for _ in range(100):  # Run the test 100 times
+         # Generate random inputs
+         matrix1 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]
+         matrix2 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]
+
+         # Load the inputs into the systolic array
+         for i in range(self.dut.N*self.dut.N):
+            yield self.dut.wb_bus.adr.eq(i)
+            yield self.dut.wb_bus.dat_w.eq(matrix1[i])
+            yield Tick()
+            yield self.dut.wb_bus.adr.eq(i+self.dut.N*self.dut.N)
+            yield self.dut.wb_bus.dat_w.eq(matrix2[i])
+            yield Tick()
+
+         # Check the output
+         for i in range(self.dut.N*self.dut.N):
+            yield self.dut.wb_bus.adr.eq(i+2*self.dut.N*self.dut.N)
+            yield Tick()
+            assert (yield self.dut.wb_bus.dat_r) == matrix1[i] * matrix2[i]
+
+# Create the systolic array and the test
+dut = SystolicArray(N=4)\nsim = SystolicArrayTest(dut)
+
+# Run the test\nsim.run()
+```
+This script creates a test for the Systolic Array. It generates random inputs, loads them into the array, and checks that the output is the multiplication of the inputs. The test is run 100 times. The results of the simulation are saved in a VCD file, which can be viewed with a waveform viewer.
+
+**Human:**  
+
+```
 Traceback (most recent call last):\n  File \"/home/james/systolicArray.py\", line 35, in <module>\n    class SystolicArrayTest(Simulator):\nNameError: name 'Simulator' is not defined
+```
+
 **GitHub Copilot:**
+
 It seems like there's a misunderstanding. The `Simulator` class is not defined in the `amaranth.sim` module. In `nmigen`, the simulation is done using the `Simulator` class from `nmigen.back.pysim` module, but it seems like `amaranth` does not have a similar class.\n\nUnfortunately, without a built-in simulator in `amaranth`, it's not straightforward to create a simulation testbench. You might need to use an external simulator like ModelSim or Icarus Verilog to test your design. \n\nYou can generate a testbench in Verilog, instantiate your design in it, apply stimulus to the inputs of your design, and check the outputs. However, this is beyond the scope of Python and involves writing Verilog code and using a Verilog simulator.\n\nIf you have a specific simulator in mind or if `amaranth` has a different way of handling simulations, please provide more details so I can give a more accurate answer.How can I simulate a hardware design implemented using the Amaranth library?",
 **Human:**  
 Please generate the test again without using a class
