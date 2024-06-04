@@ -137,11 +137,54 @@ change all instances of the word nmigen to the word amaranth
 
 **GitHub Copilot:**
 
-Here's your code with all instances of \"nmigen\" replaced with \"amaranth\":\n\n
-```python\nfrom amaranth import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\n\nclass SystolicArray(Elaboratable):\n    def __init__(self, N):\n        self.N = N\n        self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)\n        self.input_matrix1 = Array(Signal(16) for _ in range(N*N))\n        self.input_matrix2 = Array(Signal(16) for _ in range(N*N))\n        self.output_matrix = Array(Signal(32) for _ in range(N*N))\n\n    def elaborate(self, platform):\n        m = Module()\n\n        # Systolic Array logic\n        for i in range(self.N):\n            for j in range(self.N):\n                m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])\n\n        # Wishbone interface\n        with m.Switch(self.wb_bus.adr):\n            for i in range(self.N*self.N):\n                with m.Case(i):\n                    m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+self.N*self.N):\n                    m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+2*self.N*self.N):\n                    m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])\n\n        return m\n\n# Generate the Verilog code\ntop = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))\n```\n\nPlease note that this change assumes that the \"amaranth\" library has the same structure and functionality as \"nmigen\". If it doesn't, this code may not work as expected.",
+Here's your code with all instances of \"nmigen\" replaced with \"amaranth\":
+
+
+```
+from amaranth import *
+from amaranth.back import verilog
+from amaranth_soc import wishbone
+
+class SystolicArray(Elaboratable):
+   def __init__(self, N):
+      self.N = N
+      self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)
+      self.input_matrix1 = Array(Signal(16) for _ in range(N*N))
+      self.input_matrix2 = Array(Signal(16) for _ in range(N*N))
+      self.output_matrix = Array(Signal(32) for _ in range(N*N))
+
+   def elaborate(self, platform):
+      m = Module()\n\n
+
+      # Systolic Array logic
+      for i in range(self.N):
+         for j in range(self.N):
+            m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])
+
+      # Wishbone interface
+      with m.Switch(self.wb_bus.adr):
+         for i in range(self.N*self.N):
+            with m.Case(i):
+               m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+self.N*self.N):
+               m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+2*self.N*self.N):
+               m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])
+
+      return m
+
+# Generate the Verilog code
+top = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))
+```
+
+Please note that this change assumes that the \"amaranth\" library has the same structure and functionality as \"nmigen\". If it doesn't, this code may not work as expected.
+
 **Human:**
+
 Please write a script to test the functionality of the systolic array using random inputs
+
 **GitHub Copilot:**
+
 To test the functionality of the systolic array, we can create a simulation script that feeds random inputs to the systolic array and checks the output. Here's a basic example:\n\n
 ```python\nfrom amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\nimport random\n\nclass SystolicArrayTest(Simulator):\n    def __init__(self, dut):\n        super().__init__(dut, vcd_file=open(\"test.vcd\", \"w\"))\n\n    def process(self):\n        for _ in range(100):  # Run the test 100 times\n            # Generate random inputs\n            matrix1 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]\n            matrix2 = [random.randint(0, 65535) for _ in range(self.dut.N*self.dut.N)]\n\n            # Load the inputs into the systolic array\n            for i in range(self.dut.N*self.dut.N):\n                yield self.dut.wb_bus.adr.eq(i)\n                yield self.dut.wb_bus.dat_w.eq(matrix1[i])\n                yield Tick()\n                yield self.dut.wb_bus.adr.eq(i+self.dut.N*self.dut.N)\n                yield self.dut.wb_bus.dat_w.eq(matrix2[i])\n                yield Tick()\n\n            # Check the output\n            for i in range(self.dut.N*self.dut.N):\n                yield self.dut.wb_bus.adr.eq(i+2*self.dut.N*self.dut.N)\n                yield Tick()\n                assert (yield self.dut.wb_bus.dat_r) == matrix1[i] * matrix2[i]\n\n# Create the systolic array and the test\ndut = SystolicArray(N=4)\nsim = SystolicArrayTest(dut)\n\n# Run the test\nsim.run()\n```\n\nThis script creates a test for the Systolic Array. It generates random inputs, loads them into the array, and checks that the output is the multiplication of the inputs. The test is run 100 times. The results of the simulation are saved in a VCD file, which can be viewed with a waveform viewer.",
 **Human:**   
