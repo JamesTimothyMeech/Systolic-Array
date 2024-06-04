@@ -460,6 +460,77 @@ print(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.d
 
 **GitHub Copilot:**
 
-To add instant acks to the design, you can set the `ack` signal of the Wishbone bus to `1` whenever `cyc` and `stb` are `1`. Here's how you can modify your code:\n\n
-```python\nfrom amaranth import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\nfrom amaranth.sim import *\nimport random\n\nclass SystolicArray(Elaboratable):\n    def __init__(self, N):\n        self.N = N\n        self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)\n        self.input_matrix1 = Array(Signal(16) for _ in range(N*N))\n        self.input_matrix2 = Array(Signal(16) for _ in range(N*N))\n        self.output_matrix = Array(Signal(32) for _ in range(N*N))\n\n    def elaborate(self, platform):\n        m = Module()\n\n        # Systolic Array logic\n        for i in range(self.N):\n            for j in range(self.N):\n                m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])\n\n        # Wishbone interface\n        with m.Switch(self.wb_bus.adr):\n            for i in range(self.N*self.N):\n                with m.Case(i):\n                    m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+self.N*self.N):\n                    m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+2*self.N*self.N):\n                    m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])\n\n        # Instant acks\n        with m.If(self.wb_bus.cyc & self.wb_bus.stb):\n            m.d.sync += self.wb_bus.ack.eq(1)\n\n        return m\n\n# Create the systolic array\ndut = SystolicArray(N=4)\n\n# Create a simulator\nsim = Simulator(dut)\nsim.add_clock(1e-6)  # Add a 1 MHz clock\n\ndef process():\n    for _ in range(100):  # Run the test 100 times\n        # Generate random inputs\n        matrix1 = [random.randint(0, 65535) for _ in range(dut.N*dut.N)]\n        matrix2 = [random.randint(0, 65535) for _ in range(dut.N*dut.N)]\n\n        # Load the inputs into the systolic array\n        for i in range(dut.N*dut.N):\n            yield dut.wb_bus.adr.eq(i)\n            yield dut.wb_bus.dat_w.eq(matrix1[i])\n            yield Tick()\n            yield dut.wb_bus.adr.eq(i+dut.N*dut.N)\n            yield dut.wb_bus.dat_w.eq(matrix2[i])\n            yield Tick()\n\n        # Check the output\n        for i in range(dut.N*dut.N):\n            yield dut.wb_bus.adr.eq(i+2*dut.N*dut.N)\n            yield Tick()\n            assert (yield dut.wb_bus.dat_r) == matrix1[i] * matrix2[i]\n\n\n# Add the process to the simulator\nsim.add_sync_process(process)\nwith sim.write_vcd('test.vcd', 'test.gtkw'):\n    sim.run_until(1e-3, run_passive=True)\n\n# Generate the Verilog code\ntop = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb, top.wb_bus.ack]))\n```
+To add instant acks to the design, you can set the `ack` signal of the Wishbone bus to `1` whenever `cyc` and `stb` are `1`. Here's how you can modify your code:
+```
+from amaranth import *
+from amaranth.back import verilog
+from amaranth_soc import wishbone
+from amaranth.sim import *
+import random
+
+class SystolicArray(Elaboratable):
+   def __init__(self, N):
+      self.N = N
+      self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)
+      self.input_matrix1 = Array(Signal(16) for _ in range(N*N))
+      self.input_matrix2 = Array(Signal(16) for _ in range(N*N))
+      self.output_matrix = Array(Signal(32) for _ in range(N*N))
+
+   def elaborate(self, platform):
+      m = Module()
+
+      # Systolic Array logic
+      for i in range(self.N):
+         for j in range(self.N):
+            m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])
+
+      # Wishbone interface
+      with m.Switch(self.wb_bus.adr):
+         for i in range(self.N*self.N):
+            with m.Case(i):
+               m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+self.N*self.N):
+               m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+2*self.N*self.N):
+               m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])
+
+      # Instant acks
+      with m.If(self.wb_bus.cyc & self.wb_bus.stb):
+         m.d.sync += self.wb_bus.ack.eq(1)
+
+      return m
+
+# Create the systolic array
+dut = SystolicArray(N=4)
+
+# Create a simulator
+sim = Simulator(dut)
+sim.add_clock(1e-6)  # Add a 1 MHz clock
+
+def process():
+   for _ in range(100):  # Run the test 100 times
+      # Generate random inputs
+      matrix1 = [random.randint(0, 65535) for _ in range(dut.N*dut.N)]
+      matrix2 = [random.randint(0, 65535) for _ in range(dut.N*dut.N)]
+
+      # Load the inputs into the systolic array
+      for i in range(dut.N*dut.N):
+         yield dut.wb_bus.adr.eq(i)
+         yield dut.wb_bus.dat_w.eq(matrix1[i])
+         yield Tick()
+         yield dut.wb_bus.adr.eq(i+dut.N*dut.N)
+         yield dut.wb_bus.dat_w.eq(matrix2[i])
+         yield Tick()
+
+      # Check the output
+      for i in range(dut.N*dut.N):
+         yield dut.wb_bus.adr.eq(i+2*dut.N*dut.N)
+         yield Tick()
+         assert (yield dut.wb_bus.dat_r) == matrix1[i] * matrix2[i]
+
+
+# Add the process to the simulator
+sim.add_sync_process(process)\nwith sim.write_vcd('test.vcd', 'test.gtkw'):
+   sim.run_until(1e-3, run_passive=True)\n\n# Generate the Verilog code\ntop = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb, top.wb_bus.ack]))
+```
 This code adds instant acks to the design and includes the `ack` signal in the list of ports when generating the Verilog code. The test code remains the same.
