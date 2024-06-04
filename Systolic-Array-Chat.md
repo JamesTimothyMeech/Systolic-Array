@@ -1,4 +1,4 @@
-# Create and Simulate Wishbone Connected Systolic Array GitHub Copilot
+# GitHub Copilot Creates and Simulates Wishbone Systolic Array
 
 **GitHub Copilot:**
 
