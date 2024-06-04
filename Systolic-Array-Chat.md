@@ -296,10 +296,40 @@ Make the simulation generate a .vcd file and only run for a finite amount of tim
 
 To generate a .vcd file and run the simulation for a finite amount of time, you can use the `with` statement when creating the simulator and use the `run_until` method to specify the duration of the simulation. Here's how you can modify your code:
 
-```python\nfrom amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\nfrom random import randint\n\nclass PCG32(Elaboratable):\n    # ... rest of your code ...\n\n# Create the PCG32 instance\ndut = PCG32()\n\n# Create a simulator\nwith Simulator(dut, vcd_file=open(\"test.vcd\", \"w\")) as sim:\n    sim.add_clock(1e-6)  # Add a 1 MHz clock\n\n    def process():\n        # ... your test code ...\n\n    # Add the process to the simulator\n    sim.add_sync_process(process)\n\n    # Run the simulator for a finite amount of time\n    sim.run_until(1e-3, run_passive=True)  # Run for 1 ms\n```\n\nThis script will generate a .vcd file named \"test.vcd\" and the simulation will run for 1 millisecond. You can adjust the duration of the simulation by changing the argument to the `run_until` method.
+```
+from amaranth import *
+from amaranth.sim import *
+from amaranth.back import verilog
+from amaranth_soc import wishbone
+from random import randint
+
+class PCG32(Elaboratable):
+   # ... rest of your code ...
+
+# Create the PCG32 instance
+dut = PCG32()
+
+# Create a simulator
+with Simulator(dut, vcd_file=open(\"test.vcd\", \"w\")) as sim:
+   sim.add_clock(1e-6)  # Add a 1 MHz clock
+
+def process():
+   # ... your test code ...
+
+# Add the process to the simulator
+sim.add_sync_process(process)
+
+# Run the simulator for a finite amount of time
+sim.run_until(1e-3, run_passive=True)  # Run for 1 ms
+```
+This script will generate a .vcd file named \"test.vcd\" and the simulation will run for 1 millisecond. You can adjust the duration of the simulation by changing the argument to the `run_until` method.
+
 **Human:**  
+
 Print the whole test again with these changes added
+
 **GitHub Copilot:**
+
 Here's the complete test code with the changes added:\n\n
 ```python\nfrom amaranth import *\nfrom amaranth.sim import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\nfrom random import randint\n\nclass PCG32(Elaboratable):\n    def __init__(self):\n        self.multiplier = Signal(64, reset=0x5851f42d4c957f2d)\n        self.increment = Signal(64, reset=0x14057b7ef767814f)\n        self.seed = Signal(64, reset=0x123456789abcdef0)\n        self.state = Signal(64)\n        self.output = Signal(32)\n\n        # Create a Wishbone bus interface\n        self.wb_bus = wishbone.Interface(addr_width=32, data_width=32)\n\n    def elaborate(self, platform):\n        m = Module()\n\n        state = self.state\n        output = self.output\n        multiplier = self.multiplier\n        increment = self.increment\n\n        # Generate a new random number\n        m.d.comb += output.eq(state[0:32] ^ (state[32:64] >> 18))\n        m.d.sync += state.eq((state * multiplier + increment) & ((1 << 64) - 1))\n\n        # Connect the random number generator to the Wishbone bus\n        # ... rest of your code ...\n\n# Create the PCG32 instance\ndut = PCG32()\n\n# Create a simulator\nwith Simulator(dut, vcd_file=open(\"test.vcd\", \"w\")) as sim:\n    sim.add_clock(1e-6)  # Add a 1 MHz clock\n\n    def process():\n        # ... your test code ...\n\n    # Add the process to the simulator\n    sim.add_sync_process(process)\n\n    # Run the simulator for a finite amount of time\n    sim.run_until(1e-3, run_passive=True)  # Run for 1 ms\n```\n\n
 This script will generate a .vcd file named \"test.vcd\" and the simulation will run for 1 millisecond. You can adjust the duration of the simulation by changing the argument to the `run_until` method.
