@@ -59,7 +59,8 @@ def elaborate(self, platform):
    return m
 
 # Generate the Verilog code
-top = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))
+top = SystolicArray(N=4)
+print(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))
 ```
 This script creates a Systolic Array that multiplies two N by N matrices. The matrices are loaded into the array through the Wishbone bus. The result is also read out through the Wishbone bus. The size of the matrices is parameterizable by changing the value of N. The input data type is 16 bits and the output data type is 32 bits.
 **Human:**
