@@ -15,6 +15,7 @@ from amaranth_soc import wishbone
 ```
 
 **GitHub Copilot:**
+
 First, let's outline the steps in pseudocode:
 1. Import the necessary modules.
 2. Define a class for the Systolic Array.
@@ -66,6 +67,7 @@ print(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.d
 This script creates a Systolic Array that multiplies two N by N matrices. The matrices are loaded into the array through the Wishbone bus. The result is also read out through the Wishbone bus. The size of the matrices is parameterizable by changing the value of N. The input data type is 16 bits and the output data type is 32 bits.
 
 **Human:**
+
 ```
 Traceback (most recent call last):
    File \"/home/james/systolicArray.py\", line 37, in <module>
@@ -81,12 +83,60 @@ Traceback (most recent call last):
    File \"/home/james/.local/lib/python3.10/site-packages/amaranth/hdl/dsl.py\", line 510, in _add_submodule
       raise TypeError(\"Trying to add {!r}, which does not implement .elaborate(), as \"\nTypeError: Trying to add wishbone.Interface(wishbone.Signature(SignatureMembers({'adr': Out(32), 'dat_w': Out(32), 'dat_r': In(32), 'sel': Out(1), 'cyc': Out(1), 'stb': Out(1), 'we': Out(1), 'ack': In(1)}))), which does not implement .elaborate(), as a submodule
 ```
+
 **GitHub Copilot:**
-The error message indicates that the `wishbone.Interface` object does not implement the `elaborate()` method, which is required for it to be added as a submodule.\n\nIn nmigen, the `elaborate()` method is used to describe the logic of a module. It seems that the `wishbone.Interface` is not a module itself, but rather a part of a module. Therefore, it should not be added as a submodule.\n\nHere's the corrected code:\n\n
-```python\nfrom nmigen import *\nfrom nmigen.back import verilog\nfrom nmigen_soc import wishbone\n\nclass SystolicArray(Elaboratable):\n    def __init__(self, N):\n        self.N = N\n        self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)\n        self.input_matrix1 = Array(Signal(16) for _ in range(N*N))\n        self.input_matrix2 = Array(Signal(16) for _ in range(N*N))\n        self.output_matrix = Array(Signal(32) for _ in range(N*N))\n\n    def elaborate(self, platform):\n        m = Module()\n\n        # Systolic Array logic\n        for i in range(self.N):\n            for j in range(self.N):\n                m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])\n\n        # Wishbone interface\n        with m.Switch(self.wb_bus.adr):\n            for i in range(self.N*self.N):\n                with m.Case(i):\n                    m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+self.N*self.N):\n                    m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+2*self.N*self.N):\n                    m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])\n\n        return m\n\n# Generate the Verilog code\ntop = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))\n```\n\nThis should resolve the error you're encountering.",
+
+The error message indicates that the `wishbone.Interface` object does not implement the `elaborate()` method, which is required for it to be added as a submodule.\n\nIn nmigen, the `elaborate()` method is used to describe the logic of a module. It seems that the `wishbone.Interface` is not a module itself, but rather a part of a module. Therefore, it should not be added as a submodule.
+
+Here's the corrected code:
+
+
+```
+from nmigen import *
+from nmigen.back import verilog
+from nmigen_soc import wishbone
+
+class SystolicArray(Elaboratable):
+   def __init__(self, N):
+      self.N = N
+      self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)
+      self.input_matrix1 = Array(Signal(16) for _ in range(N*N))
+      self.input_matrix2 = Array(Signal(16) for _ in range(N*N))
+      self.output_matrix = Array(Signal(32) for _ in range(N*N))
+
+   def elaborate(self, platform):
+      m = Module()
+
+      # Systolic Array logic
+      for i in range(self.N):
+         for j in range(self.N):
+            m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])
+
+      # Wishbone interface
+      with m.Switch(self.wb_bus.adr):
+         for i in range(self.N*self.N):
+            with m.Case(i):
+               m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+self.N*self.N):
+               m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+2*self.N*self.N):
+               m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])
+
+      return m
+
+# Generate the Verilog code
+top = SystolicArray(N=4)
+print(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))
+```
+
+This should resolve the error you're encountering.
+
 **Human:**
-change all instances of the word nmigen to the word amaranth",
+
+change all instances of the word nmigen to the word amaranth
+
 **GitHub Copilot:**
+
 Here's your code with all instances of \"nmigen\" replaced with \"amaranth\":\n\n
 ```python\nfrom amaranth import *\nfrom amaranth.back import verilog\nfrom amaranth_soc import wishbone\n\nclass SystolicArray(Elaboratable):\n    def __init__(self, N):\n        self.N = N\n        self.wb_bus = wishbone.Interface(data_width=32, addr_width=32)\n        self.input_matrix1 = Array(Signal(16) for _ in range(N*N))\n        self.input_matrix2 = Array(Signal(16) for _ in range(N*N))\n        self.output_matrix = Array(Signal(32) for _ in range(N*N))\n\n    def elaborate(self, platform):\n        m = Module()\n\n        # Systolic Array logic\n        for i in range(self.N):\n            for j in range(self.N):\n                m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])\n\n        # Wishbone interface\n        with m.Switch(self.wb_bus.adr):\n            for i in range(self.N*self.N):\n                with m.Case(i):\n                    m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+self.N*self.N):\n                    m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)\n                with m.Case(i+2*self.N*self.N):\n                    m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])\n\n        return m\n\n# Generate the Verilog code\ntop = SystolicArray(N=4)\nprint(verilog.convert(top, ports=[top.wb_bus.adr, top.wb_bus.dat_w, top.wb_bus.dat_r, top.wb_bus.sel, top.wb_bus.we, top.wb_bus.cyc, top.wb_bus.stb]))\n```\n\nPlease note that this change assumes that the \"amaranth\" library has the same structure and functionality as \"nmigen\". If it doesn't, this code may not work as expected.",
 **Human:**
