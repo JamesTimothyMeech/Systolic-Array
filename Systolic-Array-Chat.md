@@ -38,25 +38,26 @@ class SystolicArray(Elaboratable):
       self.input_matrix2 = Array(Signal(16) for _ in range(N*N))
       self.output_matrix = Array(Signal(32) for _ in range(N*N))
 
-def elaborate(self, platform):
-   m = Module()
-   m.submodules.wb_bus = self.wb_bus
+   def elaborate(self, platform):
+      m = Module()
+      m.submodules.wb_bus = self.wb_bus
 
-   # Systolic Array logic
-   for i in range(self.N):
-      for j in range(self.N):
-         m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])
+      # Systolic Array logic
+      for i in range(self.N):
+         for j in range(self.N):
+            m.d.sync += self.output_matrix[i*self.N+j].eq(self.input_matrix1[i*self.N+j] * self.input_matrix2[i*self.N+j])
 
-   # Wishbone interface
-   with m.Switch(self.wb_bus.adr):
-      for i in range(self.N*self.N):
-         with m.Case(i):
-            m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)
-         with m.Case(i+self.N*self.N):
-            m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)
-         with m.Case(i+2*self.N*self.N):
-            m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])
-   return m
+      # Wishbone interface
+      with m.Switch(self.wb_bus.adr):
+         for i in range(self.N*self.N):
+            with m.Case(i):
+               m.d.sync += self.input_matrix1[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+self.N*self.N):
+               m.d.sync += self.input_matrix2[i].eq(self.wb_bus.dat_w)
+            with m.Case(i+2*self.N*self.N):
+               m.d.comb += self.wb_bus.dat_r.eq(self.output_matrix[i])
+
+      return m
 
 # Generate the Verilog code
 top = SystolicArray(N=4)
